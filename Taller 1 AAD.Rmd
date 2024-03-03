@@ -36,3 +36,26 @@ test <- datos[-inds,]
 
 ```
 
+3- validacion cruzada para \lambda en Ridge y Lasso
+
+Se usa Validación cruzada en k - folds para 10 folds
+
+```{r}
+library(glmnet)
+rownames(train) <- NULL
+X <- as.matrix(train[,2:5001])
+Y <- train[,1]
+
+#lambda = seq(500)
+
+valnet <- cv.glmnet(X,Y, alpha = 0)#, lambda = lambda)
+
+ecm <- valnet$cvm
+lambda <- valnet$lambda
+
+plot(lambda,ecm, type = 'l')
+
+
+
+```
+
