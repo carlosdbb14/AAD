@@ -1,30 +1,32 @@
 ---
 title: "Taller 1 Analisis Avanzado de Datos"
-author: "Carlos Daniel Barriga, Fabian Ricardo Luengas"
+subtitle: "Maestria en Matemáticas Aplicadas y Ciencias de la Computación"
+author: 
+  - "Carlos Daniel Barriga"
+  - "Fabian Ricardo Luengas"
 date: "2024-03-03"
-output: html_document
+output:
+  rmdformats::downcute
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Taller 1
+# Taller 1
 
-Problema. El conjunto de datos taller1.txt contiene la informaci´on del perf´ ıl gen´omico de un
- conjunto de 1200 l´ ıneas celulares. Para estas se busca determinar cu´ales de los 5000 genes (ubicados en
- cada columna) son de relevancia para la predicci´on de la variable respuesta (efectividad del tratamiento
- anticancer, medida como variable continua).
+*Problema:*
+El conjunto de datos *taller1*.txt contiene la información del perfíl genómico de un conjunto de 1200 líneas celulares. Para estas se busca determinar cuáles de los 5000 genes (ubicados en cada columna) son de relevancia para la predicción de la variable respuesta (efectividad del tratamiento anticancer, medida como variable continua).
 
 ```{r}
 datos <- read.csv('taller1.txt')
 ```
 
-1- Hay multicolinealidad en los datos?
+## 1- Hay multicolinealidad en los datos?
 
 si, hay multicolinealidad en los datos, debido a que hay mas variables que registros.
 
-2- Separacion de los datos
+## 2- Separacion de los datos
 
 ```{r}
 set.seed(47)
@@ -36,29 +38,63 @@ test <- datos[-inds,]
 
 ```
 
-3- validacion cruzada para $\lambda\ $ en Ridge y Lasso
+## 3- validacion cruzada para $\lambda\ $ en Ridge y Lasso
 
-Se usa Validación cruzada en k - folds para 10 folds
+Se usa Validación cruzada en k - folds para 5 folds
 
-```{r warning=FALSE}
+```{r warning=FALSE, echo=FALSE}
 library(glmnet)
 rownames(train) <- NULL
 X <- as.matrix(train[,2:5001])
 Y <- train[,1]
 
 lambda = seq(0.001,1,length=100)
+```
+
+
+### 3.1 Regresión Ridge
+
+```{r}
 
 valnet <- cv.glmnet(X,Y, alpha = 0, nfolds = 5, lambda = lambda)
 
-ecm <- valnet$cvm
-lambda <- valnet$lambda
+lambda_ridge = valnet$lambda.min
 ```
 
 ```{r}
 
-plot(lambda,ecm, type = 'l')
+plot(valnet$lambda,valnet$cvm, type = 'l', xlab = "Lambda", ylab = "ECM")
 abline(v = valnet$lambda.min, col = 'red')
 
 ```
 
 Como se puede observar en la gráfica el mejor $\lambda_r\ $ para la regresión ridge es `r valnet$lambda.min`
+
+### 3.2 regresión Lasso
+
+```{r warning=FALSE}
+
+
+valnetlasso <- cv.glmnet(X,Y, nfolds = 5, lambda = lambda)
+
+ecmls <- valnetlasso$cvm
+```
+
+```{r}
+
+plot(valnetlasso$lambda,valnetlasso$cvm, type = 'l',xlab = "Lambda", ylab = "ECM")
+abline(v = valnetlasso$lambda.min, col = 'red')
+
+lambda_lasso = valnetlasso$lambda.min
+
+```
+
+Como se puede observar en la gráfica el mejor $\lambda_l\ $ para la regresión Lasso es `r valnetlasso$lambda.min`
+
+## 4- regresión Ridge y Lasso con valores $\lambda\ $ encontrados
+
+```{r}
+model_ridge <- glmnet(X,Y,alpha = 0, lambda = lambda_ridge)
+model_lasso <- glmnet(X,Y, lambda = lambda_lasso)
+```
+
