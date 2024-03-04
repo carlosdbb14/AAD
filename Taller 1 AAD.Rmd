@@ -27,7 +27,7 @@ si, hay multicolinealidad en los datos, debido a que hay mas variables que regis
 2- Separacion de los datos
 
 ```{r}
-set.seed(327)
+set.seed(47)
 
 inds <- sample(1200,1000)
 
@@ -36,26 +36,29 @@ test <- datos[-inds,]
 
 ```
 
-3- validacion cruzada para \lambda en Ridge y Lasso
+3- validacion cruzada para $\lambda\ $ en Ridge y Lasso
 
 Se usa Validación cruzada en k - folds para 10 folds
 
-```{r}
+```{r warning=FALSE}
 library(glmnet)
 rownames(train) <- NULL
 X <- as.matrix(train[,2:5001])
 Y <- train[,1]
 
-#lambda = seq(500)
+lambda = seq(0.001,1,length=100)
 
-valnet <- cv.glmnet(X,Y, alpha = 0)#, lambda = lambda)
+valnet <- cv.glmnet(X,Y, alpha = 0, nfolds = 5, lambda = lambda)
 
 ecm <- valnet$cvm
 lambda <- valnet$lambda
+```
+
+```{r}
 
 plot(lambda,ecm, type = 'l')
-
-
+abline(v = valnet$lambda.min, col = 'red')
 
 ```
 
+Como se puede observar en la gráfica el mejor $\lambda_r\ $ para la regresión ridge es `r valnet$lambda.min`
