@@ -74,7 +74,6 @@ Como se puede observar en la gráfica el mejor $\lambda_r\ $ para la regresión 
 
 ```{r warning=FALSE}
 
-
 valnetlasso <- cv.glmnet(X,Y, nfolds = 5, lambda = lambda)
 
 ecmls <- valnetlasso$cvm
@@ -96,5 +95,39 @@ Como se puede observar en la gráfica el mejor $\lambda_l\ $ para la regresión 
 ```{r}
 model_ridge <- glmnet(X,Y,alpha = 0, lambda = lambda_ridge)
 model_lasso <- glmnet(X,Y, lambda = lambda_lasso)
+```
+
+## 5- Selección de modelos
+
+```{r}
+X_test <- as.matrix(test[,2:5001])
+Y_test <- test[,1]
+
+# Predecir valores con ambos modelos
+pred_ridge <- predict(model_ridge, newx = X_test)
+pred_lasso <- predict(model_lasso, newx = X_test)
+
+# Calcular el Error Cuadrático Medio (ECM) para cada modelo
+ecm_ridge <- mean((pred_ridge - Y_test)^2)
+ecm_lasso <- mean((pred_lasso - Y_test)^2)
+
+# Imprimir los resultados
+cat("ECM para Ridge:", ecm_ridge, "\n")
+cat("ECM para Lasso:", ecm_lasso, "\n")
+```
+De acuerdo a los resultas obtenidos, el modelo con mejor ECM es la regresión Lasso.
+
+
+## 6- Ajustar modelo seleccionado a los 1200 datos
+
+
+```{r}
+X <- as.matrix(datos[,2:5001])
+y <- datos[,1]
+model_lasso <- glmnet(X,y, lambda = lambda_lasso)
+```
+
+```{r}
+
 ```
 
