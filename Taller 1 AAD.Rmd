@@ -120,14 +120,26 @@ De acuerdo a los resultas obtenidos, el modelo con mejor ECM es la regresión La
 
 ## 6- Ajustar modelo seleccionado a los 1200 datos
 
-
+Se ajusta el modelo con el lambda encontrado con mejor ECM
 ```{r}
 X <- as.matrix(datos[,2:5001])
 y <- datos[,1]
 model_lasso <- glmnet(X,y, lambda = lambda_lasso)
 ```
 
-```{r}
 
+## 7- Grafica de las trazas de los coeficientes en función de la penalización para el modelo elegido en el punto anterior
+
+Esta línea de código genera un gráfico que muestra las trazas de los coeficientes en función de λ. Por defecto, plot para objetos glmnet muestra los coeficientes en el eje y y los logaritmos de λ en el eje x. También se incluyen líneas de trazas de coeficientes para cada variable.
+```{r}
+lambda = seq(0.001,1,length=100)
+fit_lasso <- glmnet(X,y, alpha = 0, lambda = lambda)
+
+plot(fit_lasso)
 ```
+Este gráfico es útil para visualizar cómo los coeficientes de las variables cambian a medida que se ajusta la penalización λ en el modelo Lasso. Puedes observar qué coeficientes se vuelven exactamente cero a medida que λ aumenta, lo que es característico del enfoque Lasso para la selección de variables.
+
+
+## 8- Resultados obtenidos:
+El rendimiento óptimo, evaluado mediante el Error Cuadrático Medio (ECM), se logra mediante la implementación de la regresión Lasso en comparación con la regresión Ridge. Esto sugiere la presencia de variables que no contribuyen de manera significativa al modelo; más bien, obstaculizan la capacidad de la regresión para ajustar los coeficientes de manera coherente según los datos recopilados. Este fenómeno se atribuye a la alta multicolinealidad presente en el conjunto de variables. Por otro lado, la regresión Lasso aborda eficazmente esta situación penalizando las variables menos relevantes, llevándolas a cero. Este enfoque transforma un modelo de alta dimensionalidad en uno más interpretable. Este fenómeno se refleja claramente en las trazas, donde numerosas variables han sido penalizadas hasta alcanzar el valor cero, lo que contribuye a una interpretación más precisa y eficaz del modelo. 
 
