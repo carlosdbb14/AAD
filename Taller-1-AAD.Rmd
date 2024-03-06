@@ -15,8 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Taller 1
 
-*Problema:*
-El conjunto de datos *taller1*.txt contiene la información del perfíl genómico de un conjunto de 1200 líneas celulares. Para estas se busca determinar cuáles de los 5000 genes (ubicados en cada columna) son de relevancia para la predicción de la variable respuesta (efectividad del tratamiento anticancer, medida como variable continua).
+**Problema:**
+El conjunto de datos **taller1.txt** contiene la información del perfíl genómico de un conjunto de 1200 líneas celulares. Para estas se busca determinar cuáles de los 5000 genes (ubicados en cada columna) son de relevancia para la predicción de la variable respuesta (efectividad del tratamiento anticancer, medida como variable continua).
 
 ```{r}
 datos <- read.csv('taller1.txt')
@@ -24,7 +24,7 @@ datos <- read.csv('taller1.txt')
 
 ## 1- Hay multicolinealidad en los datos?
 
-si, hay multicolinealidad en los datos, debido a que hay mas variables que registros.
+Podemos deducir la existencia de multicolinealidad en los datos debido a las pocas observaciones involucradas, y el hecho de que hay mucho menos observaciones que variables; la falta de observaciones se verá reflejada como una fuerte correlación aparente entre todas las variables.
 
 ## 2- Separacion de los datos
 
