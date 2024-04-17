@@ -1,0 +1,40 @@
+---
+title: "Taller 1 Analisis Avanzado de Datos"
+subtitle: "Maestria en Matemáticas Aplicadas y Ciencias de la Computación"
+author: 
+  - "Carlos Daniel Barriga"
+  - "Fabian Ricardo Luengas"
+date: "2024-03-03"
+output:
+  rmdformats::downcute
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Taller 2
+
+**Problema 1**
+
+El conjunto de datos Auto en la librería ISLR2, utilizado en clase, contiene la información del rendimiento y otras variables para un total de 392 vehículos. Como nos dimos cuenta, la relación entre dos de sus variables (horsepower y mpg) es resumida de manera parsimoniosa mediante un polinomio global de grado 2, sin embargo un spline suavizado (smoothing spline) parece dar un menor error de predicción. Por otra parte, determinar la ubicación y cantidad de knots en el spline de regresión (regression spline) fue un problema que desincentivó su uso. El método de validación externa utilizado para comprar los modelos fue validación regular.
+
+## 1. Separe la semilla
+
+## 2. 
+
+## 3.
+
+## 4. 
+
+## 5.
+
+## 6.
+
+**Problema 2**
+
+En el contexto de análisis de datos funcionales se tiene una colección finita de observaciones ruidosas, donde para cada individuo, estas se asumen provenientes de una curva de dimensión infinita la cual es evaluada en puntos de un intervalo determinado. Para la i-ésima unidad estadística se tiene un conjunto de $n_i$ observaciones discretizadas $x_{i1} , ..., x_{ij} , ..., x_{in_i}$ de la función $x_i$ en los puntos $t_{i1}, ..., t_{ij} , ..., t_{in_i}$ con $x_{ij} \in \mathbb{R}$, $t_{ij} \in T$ y T un intervalo que representa el dominio sobre los reales donde se definen los datos funcionales.
+
+## 7.
+
+## 8.
