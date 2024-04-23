@@ -1,5 +1,5 @@
 ---
-title: "Taller 1 Analisis Avanzado de Datos"
+title: "Taller 2 Analisis Avanzado de Datos"
 subtitle: "Maestria en Matemáticas Aplicadas y Ciencias de la Computación"
 author: 
   - "Carlos Daniel Barriga"
