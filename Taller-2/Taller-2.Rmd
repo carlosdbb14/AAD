@@ -19,15 +19,162 @@ knitr::opts_chunk$set(echo = TRUE)
 
 El conjunto de datos Auto en la librería ISLR2, utilizado en clase, contiene la información del rendimiento y otras variables para un total de 392 vehículos. Como nos dimos cuenta, la relación entre dos de sus variables (horsepower y mpg) es resumida de manera parsimoniosa mediante un polinomio global de grado 2, sin embargo un spline suavizado (smoothing spline) parece dar un menor error de predicción. Por otra parte, determinar la ubicación y cantidad de knots en el spline de regresión (regression spline) fue un problema que desincentivó su uso. El método de validación externa utilizado para comprar los modelos fue validación regular.
 
-## 1. Separe la semilla
+```{r}
+library('ISLR2')
+library('splines')
+library('boot')
+```
 
-## 2. 
 
-## 3.
+## 1. Separe aleatoriamente su conjunto de datos en dos partes
 
-## 4. 
+```{r}
 
-## 5.
+sample_size <- nrow(Auto)
+set.seed(410)
+train <- sample(sample_size, 0.9*sample_size)
+test <- seq(sample_size)[!seq(sample_size) %in% train]
+
+
+```
+
+
+## 2. Determinar el numero de Knots para una regresión spline usando validación cruzada
+
+```{r}
+set.seed(410)
+cv_error <- NULL
+```
+
+
+```{r}
+train_data <- na.omit(Auto[train,c('mpg','horsepower')])
+train_data$mpg <- as.numeric(train_data$mpg)
+train_data$horsepower <- as.numeric(train_data$horsepower)
+for (i in 1:10){
+  glm_model <- glm(mpg ~ bs(horsepower, knots=i, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
+  
+  cv_res <- cv.glm(train_data,glm_model,K=10)
+  cv_error[i] <- cv_res$delta[1]
+}
+
+mejor_knots <- which (cv_error == min(cv_error))
+
+```
+la validación cruzada en K folds evidencia que el menor ECM se da con `r mejor_knots` knots y un error de `r min(cv_error)`
+
+
+## 3. Compara modelos para encontrar el mejor modelo en base de Funciones
+
+### polinomio grado 2 global
+```{r}
+set.seed(410)
+errores_base_funciones <- NULL
+
+glm_model <- glm(mpg ~ poly(horsepower,2), data = train_data)
+  
+cv_res <- cv.glm(train_data,glm_model,K=10)
+errores_base_funciones[1] <- cv_res$delta[1]
+
+```
+
+### polinomio b-spline ajustado 
+
+```{r}
+set.seed(410)
+glm_model <- glm(mpg ~ bs(horsepower, knots=mejor_knots, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
+  
+cv_res <- cv.glm(train_data,glm_model,K=10)
+errores_base_funciones[2] <- cv_res$delta[1]
+
+```
+
+### spline suavizado
+
+```{r, warning=FALSE}
+set.seed(410)
+mse_sample <- NULL
+sample_size_2 <- nrow(train_data) 
+rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+for(i in 1:10){
+  tr <- na.omit(train_data[rnd_sample != i,])
+  tsr <- na.omit(train_data[rnd_sample == i,])
+  mod_ss = smooth.spline(tr$horsepower, tr$mpg, cv = TRUE)
+  mse_sample[i] <- mean((tsr$mpg - predict(mod_ss,tsr$horsepower)$y)**2)
+}
+
+errores_base_funciones[3] <- mean(mse_sample)
+
+```
+
+segun validación cruzada el menor ECM se da con el modelo de spline suavizado que muestra un error de `r errores_base_funciones[3]`
+
+## 4. Mejor Modelo de Regresión local
+
+```{r}
+set.seed(420)
+
+
+local_model_2 <- loess(mpg ~ horsepower, degree = 2, data = train_data)
+sample_size_2 <- nrow(train_data)
+mse_1 <- NULL
+rnd_sample = sample(rep(1:10,length.out=sample_size))
+for(i in 1:10){
+  tr <- na.omit(train_data[rnd_sample != i,])
+  tsr <- na.omit(train_data[rnd_sample == i,])
+  local_model_1 <- loess(mpg ~ horsepower, degree = 1, data = tr)
+  mse_1[i] <- mean((tsr$mpg - predict(local_model_1,tsr$horsepower))**2, na.rm = TRUE)
+  
+}
+
+
+sample_size_2 <- nrow(train_data)
+mse_2 <- NULL
+rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+for(i in 1:10){
+  tr <- na.omit(train_data[rnd_sample != i,])
+  tsr <- na.omit(train_data[rnd_sample == i,])
+  local_model_2 <- loess(mpg ~ horsepower, degree = 2, data = tr)
+  mse_2[i] <- mean((tsr$mpg - predict(local_model_2,tsr$horsepower))**2, na.rm = TRUE)
+}
+
+errores_locales <- NULL
+
+errores_locales[1] <- mean(mse_1)
+errores_locales[2] <- mean(mse_2)
+
+
+```
+el modelo con menor ECM es aquel hecho con una regresión de grado 1, que nos da un ECM de `r errores_locales[1]`
+
+## 5. seleccionar el mejor de los 3 modelos
+
+### con spline suavizado
+
+```{r, warning = FALSE}
+test_data <- Auto[test,c('mpg','horsepower')]
+
+mod_spline = smooth.spline(train_data$horsepower, train_data$mpg, cv = TRUE)
+spl_error <- mean((test_data$mpg - predict(mod_spline,test_data$horsepower)$y)**2)
+spl_error
+```
+
+### Con Polinomios Locales
+
+```{r}
+
+local_model <- loess(mpg ~ horsepower, degree = 1, data = train_data)
+local_error <- mean((test_data$mpg - predict(local_model,test_data$horsepower))**2)
+local_error
+```
+### Polinomio regresión grado 2
+
+```{r, warning=FALSE}
+reg_model <- lm(mpg ~ poly(horsepower, 2), data = train_data)
+reg_error <- mean((test_data$mpg - predict(reg_model,data.frame(horsepower = test_data$horsepower)))**2)
+reg_error
+```
+corroborando con los datos de entrenamiento y prueba, tenemos como mejor modelo el spline suavizado que nos da un ECM  de `r spl_error`
 
 ## 6.
 

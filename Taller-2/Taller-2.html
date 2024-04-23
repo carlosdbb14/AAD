@@ -1492,14 +1492,22 @@ margin-left: 0 !important;
             <ul>
             <li><a href="#taller-2" id="toc-taller-2">Taller 2</a>
             <ul>
-            <li><a href="#separe-la-semilla" id="toc-separe-la-semilla">1. Separe la semilla</a></li>
-            <li><a href="#section" id="toc-section">2.</a></li>
-            <li><a href="#section-1" id="toc-section-1">3.</a></li>
-            <li><a href="#section-2" id="toc-section-2">4.</a></li>
-            <li><a href="#section-3" id="toc-section-3">5.</a></li>
-            <li><a href="#section-4" id="toc-section-4">6.</a></li>
-            <li><a href="#section-5" id="toc-section-5">7.</a></li>
-            <li><a href="#section-6" id="toc-section-6">8.</a></li>
+            <li><a href="#separe-aleatoriamente-su-conjunto-de-datos-en-dos-partes" id="toc-separe-aleatoriamente-su-conjunto-de-datos-en-dos-partes">1.
+            Separe aleatoriamente su conjunto de datos en dos
+            partes</a></li>
+            <li><a href="#determinar-el-numero-de-knots-para-una-regresión-spline-usando-validación-cruzada" id="toc-determinar-el-numero-de-knots-para-una-regresión-spline-usando-validación-cruzada">2.
+            Determinar el numero de Knots para una regresión spline
+            usando validación cruzada</a></li>
+            <li><a href="#compara-modelos-para-encontrar-el-mejor-modelo-en-base-de-funciones" id="toc-compara-modelos-para-encontrar-el-mejor-modelo-en-base-de-funciones">3.
+            Compara modelos para encontrar el mejor modelo en base de
+            Funciones</a></li>
+            <li><a href="#mejor-modelo-de-regresión-local" id="toc-mejor-modelo-de-regresión-local">4. Mejor Modelo de
+            Regresión local</a></li>
+            <li><a href="#seleccionar-el-mejor-de-los-3-modelos" id="toc-seleccionar-el-mejor-de-los-3-modelos">5.
+            seleccionar el mejor de los 3 modelos</a></li>
+            <li><a href="#section" id="toc-section">6.</a></li>
+            <li><a href="#section-1" id="toc-section-1">7.</a></li>
+            <li><a href="#section-2" id="toc-section-2">8.</a></li>
             </ul></li>
             </ul>
           </div>
@@ -1542,22 +1550,139 @@ parte, determinar la ubicación y cantidad de knots en el spline de
 regresión (regression spline) fue un problema que desincentivó su uso.
 El método de validación externa utilizado para comprar los modelos fue
 validación regular.</p>
-<div id="separe-la-semilla" class="section level2">
-<h2>1. Separe la semilla</h2>
+<pre class="r"><code>library(&#39;ISLR2&#39;)</code></pre>
+<pre><code>## Warning: package &#39;ISLR2&#39; was built under R version 4.3.3</code></pre>
+<pre class="r"><code>library(&#39;splines&#39;)
+library(&#39;boot&#39;)</code></pre>
+<div id="separe-aleatoriamente-su-conjunto-de-datos-en-dos-partes" class="section level2">
+<h2>1. Separe aleatoriamente su conjunto de datos en dos partes</h2>
+<pre class="r"><code>sample_size &lt;- nrow(Auto)
+set.seed(410)
+train &lt;- sample(sample_size, 0.9*sample_size)
+test &lt;- seq(sample_size)[!seq(sample_size) %in% train]</code></pre>
+</div>
+<div id="determinar-el-numero-de-knots-para-una-regresión-spline-usando-validación-cruzada" class="section level2">
+<h2>2. Determinar el numero de Knots para una regresión spline usando
+validación cruzada</h2>
+<pre class="r"><code>set.seed(410)
+cv_error &lt;- NULL</code></pre>
+<pre class="r"><code>train_data &lt;- na.omit(Auto[train,c(&#39;mpg&#39;,&#39;horsepower&#39;)])
+train_data$mpg &lt;- as.numeric(train_data$mpg)
+train_data$horsepower &lt;- as.numeric(train_data$horsepower)
+for (i in 1:10){
+  glm_model &lt;- glm(mpg ~ bs(horsepower, knots=i, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
+  
+  cv_res &lt;- cv.glm(train_data,glm_model,K=10)
+  cv_error[i] &lt;- cv_res$delta[1]
+}
+
+mejor_knots &lt;- which (cv_error == min(cv_error))</code></pre>
+<p>la validación cruzada en K folds evidencia que el menor ECM se da con
+8 knots y un error de 18.6610089</p>
+</div>
+<div id="compara-modelos-para-encontrar-el-mejor-modelo-en-base-de-funciones" class="section level2">
+<h2>3. Compara modelos para encontrar el mejor modelo en base de
+Funciones</h2>
+<div id="polinomio-grado-2-global" class="section level3">
+<h3>polinomio grado 2 global</h3>
+<pre class="r"><code>set.seed(410)
+errores_base_funciones &lt;- NULL
+
+glm_model &lt;- glm(mpg ~ poly(horsepower,2), data = train_data)
+  
+cv_res &lt;- cv.glm(train_data,glm_model,K=10)
+errores_base_funciones[1] &lt;- cv_res$delta[1]</code></pre>
+</div>
+<div id="polinomio-b-spline-ajustado" class="section level3">
+<h3>polinomio b-spline ajustado</h3>
+<pre class="r"><code>set.seed(410)
+glm_model &lt;- glm(mpg ~ bs(horsepower, knots=mejor_knots, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
+  
+cv_res &lt;- cv.glm(train_data,glm_model,K=10)
+errores_base_funciones[2] &lt;- cv_res$delta[1]</code></pre>
+</div>
+<div id="spline-suavizado" class="section level3">
+<h3>spline suavizado</h3>
+<pre class="r"><code>set.seed(410)
+mse_sample &lt;- NULL
+sample_size_2 &lt;- nrow(train_data) 
+rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+for(i in 1:10){
+  tr &lt;- na.omit(train_data[rnd_sample != i,])
+  tsr &lt;- na.omit(train_data[rnd_sample == i,])
+  mod_ss = smooth.spline(tr$horsepower, tr$mpg, cv = TRUE)
+  mse_sample[i] &lt;- mean((tsr$mpg - predict(mod_ss,tsr$horsepower)$y)**2)
+}
+
+errores_base_funciones[3] &lt;- mean(mse_sample)</code></pre>
+<p>segun validación cruzada el menor ECM se da con el modelo de spline
+suavizado que muestra un error de 18.509363</p>
+</div>
+</div>
+<div id="mejor-modelo-de-regresión-local" class="section level2">
+<h2>4. Mejor Modelo de Regresión local</h2>
+<pre class="r"><code>set.seed(420)
+
+
+local_model_2 &lt;- loess(mpg ~ horsepower, degree = 2, data = train_data)
+sample_size_2 &lt;- nrow(train_data)
+mse_1 &lt;- NULL
+rnd_sample = sample(rep(1:10,length.out=sample_size))
+for(i in 1:10){
+  tr &lt;- na.omit(train_data[rnd_sample != i,])
+  tsr &lt;- na.omit(train_data[rnd_sample == i,])
+  local_model_1 &lt;- loess(mpg ~ horsepower, degree = 1, data = tr)
+  mse_1[i] &lt;- mean((tsr$mpg - predict(local_model_1,tsr$horsepower))**2, na.rm = TRUE)
+  
+}
+
+
+sample_size_2 &lt;- nrow(train_data)
+mse_2 &lt;- NULL
+rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+for(i in 1:10){
+  tr &lt;- na.omit(train_data[rnd_sample != i,])
+  tsr &lt;- na.omit(train_data[rnd_sample == i,])
+  local_model_2 &lt;- loess(mpg ~ horsepower, degree = 2, data = tr)
+  mse_2[i] &lt;- mean((tsr$mpg - predict(local_model_2,tsr$horsepower))**2, na.rm = TRUE)
+}
+
+errores_locales &lt;- NULL
+
+errores_locales[1] &lt;- mean(mse_1)
+errores_locales[2] &lt;- mean(mse_2)</code></pre>
+<p>el modelo con menor ECM es aquel hecho con una regresión de grado 1,
+que nos da un ECM de 18.2831196</p>
+</div>
+<div id="seleccionar-el-mejor-de-los-3-modelos" class="section level2">
+<h2>5. seleccionar el mejor de los 3 modelos</h2>
+<div id="con-spline-suavizado" class="section level3">
+<h3>con spline suavizado</h3>
+<pre class="r"><code>test_data &lt;- Auto[test,c(&#39;mpg&#39;,&#39;horsepower&#39;)]
+
+mod_spline = smooth.spline(train_data$horsepower, train_data$mpg, cv = TRUE)
+spl_error &lt;- mean((test_data$mpg - predict(mod_spline,test_data$horsepower)$y)**2)
+spl_error</code></pre>
+<pre><code>## [1] 22.78775</code></pre>
+</div>
+<div id="con-polinomios-locales" class="section level3">
+<h3>Con Polinomios Locales</h3>
+<pre class="r"><code>local_model &lt;- loess(mpg ~ horsepower, degree = 1, data = train_data)
+local_error &lt;- mean((test_data$mpg - predict(local_model,test_data$horsepower))**2)
+local_error</code></pre>
+<pre><code>## [1] 23.18539</code></pre>
+</div>
+<div id="polinomio-regresión-grado-2" class="section level3">
+<h3>Polinomio regresión grado 2</h3>
+<pre class="r"><code>reg_model &lt;- lm(mpg ~ poly(horsepower, 2), data = train_data)
+reg_error &lt;- mean((test_data$mpg - predict(reg_model,data.frame(horsepower = test_data$horsepower)))**2)
+reg_error</code></pre>
+<pre><code>## [1] 23.9694</code></pre>
+<p>corroborando con los datos de entrenamiento y prueba, tenemos como
+mejor modelo el spline suavizado que nos da un ECM de 22.7877536</p>
+</div>
 </div>
 <div id="section" class="section level2">
-<h2>2.</h2>
-</div>
-<div id="section-1" class="section level2">
-<h2>3.</h2>
-</div>
-<div id="section-2" class="section level2">
-<h2>4.</h2>
-</div>
-<div id="section-3" class="section level2">
-<h2>5.</h2>
-</div>
-<div id="section-4" class="section level2">
 <h2>6.</h2>
 <p><strong>Problema 2</strong></p>
 <p>En el contexto de análisis de datos funcionales se tiene una
@@ -1570,10 +1695,10 @@ la función <span class="math inline">\(x_i\)</span> en los puntos <span class="
 representa el dominio sobre los reales donde se definen los datos
 funcionales.</p>
 </div>
-<div id="section-5" class="section level2">
+<div id="section-1" class="section level2">
 <h2>7.</h2>
 </div>
-<div id="section-6" class="section level2">
+<div id="section-2" class="section level2">
 <h2>8.</h2>
 </div>
 </div>
