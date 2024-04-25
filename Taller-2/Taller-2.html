@@ -1505,9 +1505,25 @@ margin-left: 0 !important;
             Regresión local</a></li>
             <li><a href="#seleccionar-el-mejor-de-los-3-modelos" id="toc-seleccionar-el-mejor-de-los-3-modelos">5.
             seleccionar el mejor de los 3 modelos</a></li>
-            <li><a href="#section" id="toc-section">6.</a></li>
-            <li><a href="#section-1" id="toc-section-1">7.</a></li>
-            <li><a href="#section-2" id="toc-section-2">8.</a></li>
+            <li><a href="#repita-1---5-un-total-de-10-veces-de-manera-que-en-el-paso-1-conforme-una-nueva-muestra-de-validación-cruzada-esto-le-permitiría-obtener-10-ecm-de-prueba-para-cada-paradigma-de-modelamiento.-grafique-las-tres-distribuciones-del-ecm-de-prueba-y-responda-cúal-acercmiento-seleccionaría-basado-en-el-ecm-de-predición-basado-en-base-de-funciones-basado-en-regresión-local-o-polinomial-global." id="toc-repita-1---5-un-total-de-10-veces-de-manera-que-en-el-paso-1-conforme-una-nueva-muestra-de-validación-cruzada-esto-le-permitiría-obtener-10-ecm-de-prueba-para-cada-paradigma-de-modelamiento.-grafique-las-tres-distribuciones-del-ecm-de-prueba-y-responda-cúal-acercmiento-seleccionaría-basado-en-el-ecm-de-predición-basado-en-base-de-funciones-basado-en-regresión-local-o-polinomial-global.">6.
+            Repita (1) - (5) un total de 10 veces de manera que en el
+            paso (1) conforme una nueva muestra de validación cruzada,
+            esto le permitiría obtener 10 ECM de prueba para cada
+            paradigma de modelamiento. Grafique las tres distribuciones
+            del ECM de prueba y responda ¿Cúal acercmiento seleccionaría
+            basado en el ECM de predición: basado en base de funciones,
+            basado en regresión local o polinomial global?.</a></li>
+            </ul></li>
+            <li><a href="#problema-2" id="toc-problema-2"><strong>Problema 2</strong></a>
+            <ul>
+            <li><a href="#escriba-el-estimador-de-nadaryawatson-para-la-i-ésima-unidad-estadística-en-t-es-decir-xt." id="toc-escriba-el-estimador-de-nadaryawatson-para-la-i-ésima-unidad-estadística-en-t-es-decir-xt.">7.
+            Escriba el estimador de Nadarya–Watson para la i-ésima
+            unidad estadística en t, es decir, x(t).</a></li>
+            <li><a href="#escriba-el-estimador-de-nadaryawatson-para-la-funcion-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media." id="toc-escriba-el-estimador-de-nadaryawatson-para-la-funcion-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media.">8.
+            Escriba el estimador de Nadarya–Watson para la funci´on
+            media en t, es decir, ˆμ(t). Note que todos los datos
+            discretizados son utilizados en la estimaci´on de la
+            funci´on media.</a></li>
             </ul></li>
             </ul>
           </div>
@@ -1597,7 +1613,7 @@ errores_base_funciones[1] &lt;- cv_res$delta[1]</code></pre>
 <h3>polinomio b-spline ajustado</h3>
 <pre class="r"><code>set.seed(410)
 glm_model &lt;- glm(mpg ~ bs(horsepower, knots=mejor_knots, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
-  
+
 cv_res &lt;- cv.glm(train_data,glm_model,K=10)
 errores_base_funciones[2] &lt;- cv_res$delta[1]</code></pre>
 </div>
@@ -1607,6 +1623,7 @@ errores_base_funciones[2] &lt;- cv_res$delta[1]</code></pre>
 mse_sample &lt;- NULL
 sample_size_2 &lt;- nrow(train_data) 
 rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+
 for(i in 1:10){
   tr &lt;- na.omit(train_data[rnd_sample != i,])
   tsr &lt;- na.omit(train_data[rnd_sample == i,])
@@ -1614,7 +1631,9 @@ for(i in 1:10){
   mse_sample[i] &lt;- mean((tsr$mpg - predict(mod_ss,tsr$horsepower)$y)**2)
 }
 
-errores_base_funciones[3] &lt;- mean(mse_sample)</code></pre>
+errores_base_funciones[3] &lt;- mean(mse_sample)
+errores_base_funciones</code></pre>
+<pre><code>## [1] 18.67292 18.72733 18.50936</code></pre>
 <p>segun validación cruzada el menor ECM se da con el modelo de spline
 suavizado que muestra un error de 18.509363</p>
 </div>
@@ -1682,9 +1701,25 @@ reg_error</code></pre>
 mejor modelo el spline suavizado que nos da un ECM de 22.7877536</p>
 </div>
 </div>
-<div id="section" class="section level2">
-<h2>6.</h2>
-<p><strong>Problema 2</strong></p>
+<div id="repita-1---5-un-total-de-10-veces-de-manera-que-en-el-paso-1-conforme-una-nueva-muestra-de-validación-cruzada-esto-le-permitiría-obtener-10-ecm-de-prueba-para-cada-paradigma-de-modelamiento.-grafique-las-tres-distribuciones-del-ecm-de-prueba-y-responda-cúal-acercmiento-seleccionaría-basado-en-el-ecm-de-predición-basado-en-base-de-funciones-basado-en-regresión-local-o-polinomial-global." class="section level2">
+<h2>6. Repita (1) - (5) un total de 10 veces de manera que en el paso
+(1) conforme una nueva muestra de validación cruzada, esto le permitiría
+obtener 10 ECM de prueba para cada paradigma de modelamiento. Grafique
+las tres distribuciones del ECM de prueba y responda ¿Cúal acercmiento
+seleccionaría basado en el ECM de predición: basado en base de
+funciones, basado en regresión local o polinomial global?.</h2>
+<pre><code>## Resultado basado en Funciones:</code></pre>
+<pre><code>## [1] 19.08208</code></pre>
+<pre><code>## Regresión local:</code></pre>
+<pre><code>## [1] 18.75106</code></pre>
+<pre><code>## Polinomica grado 2:</code></pre>
+<pre><code>## [1] 22.92107</code></pre>
+<p>De acuerdo a los resultados se selecciona el modelo de regresión
+Local</p>
+</div>
+</div>
+<div id="problema-2" class="section level1">
+<h1><strong>Problema 2</strong></h1>
 <p>En el contexto de análisis de datos funcionales se tiene una
 colección finita de observaciones ruidosas, donde para cada individuo,
 estas se asumen provenientes de una curva de dimensión infinita la cual
@@ -1694,12 +1729,28 @@ la función <span class="math inline">\(x_i\)</span> en los puntos <span class="
 <span class="math inline">\(x_{ij} \in \mathbb{R}\)</span>, <span class="math inline">\(t_{ij} \in T\)</span> y T un intervalo que
 representa el dominio sobre los reales donde se definen los datos
 funcionales.</p>
+<p>Problema 2 - 20 pts. En el contexto de an´alisis de datos funcionales
+se tiene una colección finita de observaciones ruidosas, donde para cada
+individuo, estas se asumen provenientes de una curva de dimensión
+infinita la cual es evaluada en puntos de un intervalo determinado. Para
+la i-ésima unidad estadística se tiene un conjunto de ni observaciones
+discretizadas xi1, …, xij , …, xini de la función xi en los puntos ti1,
+…, tij , …, tini con xij ∈ R, tij ∈ T y T un intervalo que representa el
+dominio sobre los reales donde se definen los datos funcionales.</p>
+<div id="escriba-el-estimador-de-nadaryawatson-para-la-i-ésima-unidad-estadística-en-t-es-decir-xt." class="section level2">
+<h2>7. Escriba el estimador de Nadarya–Watson para la i-ésima unidad
+estadística en t, es decir, x(t).</h2>
+<p>La centralidad de los datos funcionales se resume en la funci´on
+media μ, la cual puede interpretarse en cada valor t ∈ T como el valor
+promedio de la funci´on aleatoria subyacente en t, μ(t). F´ıjese que el
+estimador de Nadarya–Watson puede extenderse a m´as de una unidad
+estad´ıstica, resultando en t como un promedio ponderado de las
+observaciones cercanas para todas las observaciones xij :</p>
 </div>
-<div id="section-1" class="section level2">
-<h2>7.</h2>
-</div>
-<div id="section-2" class="section level2">
-<h2>8.</h2>
+<div id="escriba-el-estimador-de-nadaryawatson-para-la-funcion-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media." class="section level2">
+<h2>8. Escriba el estimador de Nadarya–Watson para la funci´on media en
+t, es decir, ˆμ(t). Note que todos los datos discretizados son
+utilizados en la estimaci´on de la funci´on media.</h2>
 </div>
 </div>
 </div>

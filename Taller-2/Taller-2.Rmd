@@ -34,8 +34,6 @@ sample_size <- nrow(Auto)
 set.seed(410)
 train <- sample(sample_size, 0.9*sample_size)
 test <- seq(sample_size)[!seq(sample_size) %in% train]
-
-
 ```
 
 
@@ -75,7 +73,6 @@ glm_model <- glm(mpg ~ poly(horsepower,2), data = train_data)
   
 cv_res <- cv.glm(train_data,glm_model,K=10)
 errores_base_funciones[1] <- cv_res$delta[1]
-
 ```
 
 ### polinomio b-spline ajustado 
@@ -83,7 +80,7 @@ errores_base_funciones[1] <- cv_res$delta[1]
 ```{r}
 set.seed(410)
 glm_model <- glm(mpg ~ bs(horsepower, knots=mejor_knots, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
-  
+
 cv_res <- cv.glm(train_data,glm_model,K=10)
 errores_base_funciones[2] <- cv_res$delta[1]
 
@@ -96,6 +93,7 @@ set.seed(410)
 mse_sample <- NULL
 sample_size_2 <- nrow(train_data) 
 rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+
 for(i in 1:10){
   tr <- na.omit(train_data[rnd_sample != i,])
   tsr <- na.omit(train_data[rnd_sample == i,])
@@ -104,7 +102,7 @@ for(i in 1:10){
 }
 
 errores_base_funciones[3] <- mean(mse_sample)
-
+errores_base_funciones
 ```
 
 segun validación cruzada el menor ECM se da con el modelo de spline suavizado que muestra un error de `r errores_base_funciones[3]`
@@ -167,6 +165,7 @@ local_model <- loess(mpg ~ horsepower, degree = 1, data = train_data)
 local_error <- mean((test_data$mpg - predict(local_model,test_data$horsepower))**2)
 local_error
 ```
+
 ### Polinomio regresión grado 2
 
 ```{r, warning=FALSE}
@@ -174,14 +173,144 @@ reg_model <- lm(mpg ~ poly(horsepower, 2), data = train_data)
 reg_error <- mean((test_data$mpg - predict(reg_model,data.frame(horsepower = test_data$horsepower)))**2)
 reg_error
 ```
+
 corroborando con los datos de entrenamiento y prueba, tenemos como mejor modelo el spline suavizado que nos da un ECM  de `r spl_error`
 
-## 6.
+## 6. Repita (1) - (5) un total de 10 veces de manera que en el paso (1) conforme una nueva muestra de validación cruzada, esto le permitiría obtener 10 ECM de prueba para cada paradigma de modelamiento. Grafique las tres distribuciones del ECM de prueba y responda ¿Cúal acercmiento seleccionaría basado en el ECM de predición: basado en base de funciones, basado en regresión local o polinomial global?.
 
-**Problema 2**
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE}
+sample_size <- nrow(Auto)
+
+num_iteraciones <- 10
+
+funciones_ECM <- numeric(0)
+
+funciones_locales_ECM <- numeric(0)
+
+funciones_pol2_ECM <- numeric(0)
+
+for (i in 1:num_iteraciones)
+{
+  semilla <- set.seed(410+i)
+  
+  #cat("ITERACIÓN: ")
+  #print(i)
+  #cat("\n")
+  
+  train <- sample(sample_size, 0.9*sample_size)
+  test <- seq(sample_size)[!seq(sample_size) %in% train]
+  
+  cv_error <- NULL
+  
+  train_data <- na.omit(Auto[train,c('mpg','horsepower')])
+  train_data$mpg <- as.numeric(train_data$mpg)
+  train_data$horsepower <- as.numeric(train_data$horsepower)
+  for (i in 1:10){
+    glm_model <- glm(mpg ~ bs(horsepower, knots=i, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
+    
+    cv_res <- cv.glm(train_data,glm_model,K=10)
+    cv_error[i] <- cv_res$delta[1]
+  }
+  
+  mejor_knots <- which (cv_error == min(cv_error))
+  
+  set.seed(410)
+  errores_base_funciones <- NULL
+  glm_model <- glm(mpg ~ poly(horsepower,2), data = train_data)
+  
+  ### polinomio grado 2 global
+  cv_res <- cv.glm(train_data,glm_model,K=10)
+  errores_base_funciones[1] <- cv_res$delta[1]
+  
+  set.seed(410)
+  glm_model <- glm(mpg ~ bs(horsepower, knots=mejor_knots, Boundary.knots = range(horsepower) + c(-10,+10)), data = train_data)
+  
+  ### polinomio b-spline ajustado 
+  cv_res <- cv.glm(train_data,glm_model,K=10)
+  errores_base_funciones[2] <- cv_res$delta[1]
+  
+  set.seed(410)
+  mse_sample <- NULL
+  sample_size_2 <- nrow(train_data) 
+  rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+  
+  for(i in 1:10){
+    tr <- na.omit(train_data[rnd_sample != i,])
+    tsr <- na.omit(train_data[rnd_sample == i,])
+    mod_ss = smooth.spline(tr$horsepower, tr$mpg, cv = TRUE)
+    mse_sample[i] <- mean((tsr$mpg - predict(mod_ss,tsr$horsepower)$y)**2)
+  }
+  
+  ### Modelo basado en funciones
+  errores_base_funciones[3] <- mean(mse_sample)
+  
+  #cat("Modelo basado en funciones:\n")
+  #print(min(errores_base_funciones))
+  #cat("\n")
+  
+  funciones_ECM <- append(funciones_ECM,mean(errores_base_funciones))
+  
+  ### Mejor Modelo de Regresión local
+  
+  local_model_2 <- loess(mpg ~ horsepower, degree = 2, data = train_data)
+  sample_size_2 <- nrow(train_data)
+  mse_1 <- NULL
+  rnd_sample = sample(rep(1:10,length.out=sample_size))
+  for(i in 1:10){
+    tr <- na.omit(train_data[rnd_sample != i,])
+    tsr <- na.omit(train_data[rnd_sample == i,])
+    local_model_1 <- loess(mpg ~ horsepower, degree = 1, data = tr)
+    mse_1[i] <- mean((tsr$mpg - predict(local_model_1,tsr$horsepower))**2, na.rm = TRUE)
+  }
+  
+  sample_size_2 <- nrow(train_data)
+  mse_2 <- NULL
+  rnd_sample = sample(rep(1:10,length.out=sample_size_2))
+  for(i in 1:10){
+    tr <- na.omit(train_data[rnd_sample != i,])
+    tsr <- na.omit(train_data[rnd_sample == i,])
+    local_model_2 <- loess(mpg ~ horsepower, degree = 2, data = tr)
+    mse_2[i] <- mean((tsr$mpg - predict(local_model_2,tsr$horsepower))**2, na.rm = TRUE)
+  }
+  
+  ## Mejor Modelo de Regresión local
+  errores_locales <- NULL
+  errores_locales[1] <- mean(mse_1)
+  errores_locales[2] <- mean(mse_2)
+  
+  #cat("Mejor Modelo de Regresión local:\n")
+  #print(min(errores_locales))
+  #cat("\n")
+  
+  funciones_locales_ECM <- append(funciones_locales_ECM,mean(errores_locales))
+  
+  
+  reg_model <- lm(mpg ~ poly(horsepower, 2), data = train_data)
+  reg_error <- mean((test_data$mpg - predict(reg_model,data.frame(horsepower = test_data$horsepower)))**2)
+  
+  funciones_pol2_ECM <- append(funciones_pol2_ECM,reg_error)
+  
+}
+cat("Resultado basado en Funciones:\n")
+print(mean(funciones_ECM))
+cat("Regresión local:\n")
+print(mean(funciones_locales_ECM))
+cat("Polinomica grado 2:\n")
+print(mean(funciones_pol2_ECM))
+
+```
+De acuerdo a los resultados se selecciona el modelo de regresión Local
+
+# **Problema 2**
 
 En el contexto de análisis de datos funcionales se tiene una colección finita de observaciones ruidosas, donde para cada individuo, estas se asumen provenientes de una curva de dimensión infinita la cual es evaluada en puntos de un intervalo determinado. Para la i-ésima unidad estadística se tiene un conjunto de $n_i$ observaciones discretizadas $x_{i1} , ..., x_{ij} , ..., x_{in_i}$ de la función $x_i$ en los puntos $t_{i1}, ..., t_{ij} , ..., t_{in_i}$ con $x_{ij} \in \mathbb{R}$, $t_{ij} \in T$ y T un intervalo que representa el dominio sobre los reales donde se definen los datos funcionales.
 
-## 7.
+Problema 2 - 20 pts. En el contexto de an´alisis de datos funcionales se tiene una colección finita de observaciones ruidosas, donde para cada individuo, estas se asumen provenientes de una curva de dimensión infinita la cual es evaluada en puntos de un intervalo determinado. Para la i-ésima unidad estadística se tiene un conjunto de ni observaciones discretizadas xi1, ..., xij , ..., xini de la función xi en los puntos ti1, ..., tij , ..., tini con xij ∈ R, tij ∈ T y T un intervalo que representa el dominio sobre los reales donde se definen los datos funcionales.
 
-## 8.
+## 7. Escriba el estimador de Nadarya–Watson para la i-ésima unidad estadística en t, es decir, x(t).
+
+La centralidad de los datos funcionales se resume en la funci´on media μ, la cual puede interpretarse en cada valor t ∈ T como el valor promedio de la funci´on aleatoria subyacente en t, μ(t). F´ıjese que el estimador de Nadarya–Watson puede extenderse a m´as de una unidad estad´ıstica, resultando en t como un promedio ponderado de las observaciones cercanas para todas las observaciones xij :
+
+## 8. Escriba el estimador de Nadarya–Watson para la funci´on media en t, es decir, ˆμ(t). Note que todos los datos discretizados son utilizados en la estimaci´on de la funci´on media.
+
