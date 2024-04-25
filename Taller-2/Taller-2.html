@@ -1519,9 +1519,9 @@ margin-left: 0 !important;
             <li><a href="#escriba-el-estimador-de-nadaryawatson-para-la-i-ésima-unidad-estadística-en-t-es-decir-xt." id="toc-escriba-el-estimador-de-nadaryawatson-para-la-i-ésima-unidad-estadística-en-t-es-decir-xt.">7.
             Escriba el estimador de Nadarya–Watson para la i-ésima
             unidad estadística en t, es decir, x(t).</a></li>
-            <li><a href="#escriba-el-estimador-de-nadaryawatson-para-la-funcion-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media." id="toc-escriba-el-estimador-de-nadaryawatson-para-la-funcion-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media.">8.
-            Escriba el estimador de Nadarya–Watson para la funci´on
-            media en t, es decir, ˆμ(t). Note que todos los datos
+            <li><a href="#escriba-el-estimador-de-nadaryawatson-para-la-función-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media." id="toc-escriba-el-estimador-de-nadaryawatson-para-la-función-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media.">8.
+            Escriba el estimador de Nadarya–Watson para la función media
+            en t, es decir, ˆμ(t). Note que todos los datos
             discretizados son utilizados en la estimaci´on de la
             funci´on media.</a></li>
             </ul></li>
@@ -1746,11 +1746,34 @@ promedio de la funci´on aleatoria subyacente en t, μ(t). F´ıjese que el
 estimador de Nadarya–Watson puede extenderse a m´as de una unidad
 estad´ıstica, resultando en t como un promedio ponderado de las
 observaciones cercanas para todas las observaciones xij :</p>
+<pre class="r"><code># Generar datos de ejemplo
+set.seed(123)  # Para reproducibilidad
+n &lt;- 100  # Número de observaciones
+ti &lt;- seq(0, 10, length.out = n)  # Puntos de la función
+xi &lt;- sin(ti) + rnorm(n, mean = 0, sd = 0.2)  # Datos generados con ruido
+
+# Calcular el estimador de Nadaraya-Watson utilizando loess()
+nw_model_1 &lt;- loess(xi ~ ti, span = 0.5, degree = 1)  # Ajustar el modelo loess
+
+nw_model_2 &lt;- loess(xi ~ ti, span = 0.5, degree = 2)  # Ajustar el modelo loess</code></pre>
+<p>Se ajusta el ancho de banda con 0.5 el cual es utilizado para ajustar
+la curva de regresión localmente ponderada, con esto se busca un punto
+medio en el suavizado de la función</p>
 </div>
-<div id="escriba-el-estimador-de-nadaryawatson-para-la-funcion-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media." class="section level2">
-<h2>8. Escriba el estimador de Nadarya–Watson para la funci´on media en
+<div id="escriba-el-estimador-de-nadaryawatson-para-la-función-media-en-t-es-decir-ˆμt.-note-que-todos-los-datos-discretizados-son-utilizados-en-la-estimacion-de-la-funcion-media." class="section level2">
+<h2>8. Escriba el estimador de Nadarya–Watson para la función media en
 t, es decir, ˆμ(t). Note que todos los datos discretizados son
 utilizados en la estimaci´on de la funci´on media.</h2>
+<pre class="r"><code># Punto en el que se desea estimar la función
+t &lt;- 1
+estimacion_media1  &lt;- predict(nw_model_1, newdata = data.frame(ti = t))  # Predecir en el punto t
+estimacion_media2  &lt;- predict(nw_model_2, newdata = data.frame(ti = t))  # Predecir en el punto t
+# Imprimir la estimación
+print(paste(&quot;Estimación de la función1 media en el punto t:&quot;, estimacion_media1))</code></pre>
+<pre><code>## [1] &quot;Estimación de la función1 media en el punto t: 0.659423556184861&quot;</code></pre>
+<pre class="r"><code># Imprimir la estimación
+print(paste(&quot;Estimación de la función2 media en el punto t:&quot;, estimacion_media2))</code></pre>
+<pre><code>## [1] &quot;Estimación de la función2 media en el punto t: 0.79345674342361&quot;</code></pre>
 </div>
 </div>
 </div>

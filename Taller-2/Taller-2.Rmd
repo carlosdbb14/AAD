@@ -312,5 +312,34 @@ Problema 2 - 20 pts. En el contexto de an´alisis de datos funcionales se tiene 
 
 La centralidad de los datos funcionales se resume en la funci´on media μ, la cual puede interpretarse en cada valor t ∈ T como el valor promedio de la funci´on aleatoria subyacente en t, μ(t). F´ıjese que el estimador de Nadarya–Watson puede extenderse a m´as de una unidad estad´ıstica, resultando en t como un promedio ponderado de las observaciones cercanas para todas las observaciones xij :
 
-## 8. Escriba el estimador de Nadarya–Watson para la funci´on media en t, es decir, ˆμ(t). Note que todos los datos discretizados son utilizados en la estimaci´on de la funci´on media.
+```{r}
+# Generar datos de ejemplo
+set.seed(123)  # Para reproducibilidad
+n <- 100  # Número de observaciones
+ti <- seq(0, 10, length.out = n)  # Puntos de la función
+xi <- sin(ti) + rnorm(n, mean = 0, sd = 0.2)  # Datos generados con ruido
+
+# Calcular el estimador de Nadaraya-Watson utilizando loess()
+nw_model_1 <- loess(xi ~ ti, span = 0.5, degree = 1)  # Ajustar el modelo loess
+
+nw_model_2 <- loess(xi ~ ti, span = 0.5, degree = 2)  # Ajustar el modelo loess
+```
+Se ajusta el ancho de banda con 0.5 el cual es utilizado para ajustar la curva de regresión localmente ponderada, con esto se busca un punto medio en el suavizado de la función 
+
+## 8. Escriba el estimador de Nadarya–Watson para la función media en t, es decir, ˆμ(t). Note que todos los datos discretizados son utilizados en la estimaci´on de la funci´on media.
+
+
+```{r}
+# Punto en el que se desea estimar la función
+t <- 1
+estimacion_media1  <- predict(nw_model_1, newdata = data.frame(ti = t))  # Predecir en el punto t
+estimacion_media2  <- predict(nw_model_2, newdata = data.frame(ti = t))  # Predecir en el punto t
+# Imprimir la estimación
+print(paste("Estimación de la función1 media en el punto t:", estimacion_media1))
+
+
+# Imprimir la estimación
+print(paste("Estimación de la función2 media en el punto t:", estimacion_media2))
+```
+
 
