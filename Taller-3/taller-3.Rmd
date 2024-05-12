@@ -1,0 +1,285 @@
+---
+title: "Taller 2 Analisis Avanzado de Datos"
+subtitle: "Maestria en Matemáticas Aplicadas y Ciencias de la Computación"
+author: 
+  - "Carlos Daniel Barriga"
+  - "Fabian Ricardo Luengas"
+date: "2024-03-03"
+output:
+  rmdformats::downcute
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, include=FALSE}
+library(readxl)
+```
+
+## Problema 1 - 20 pts (teórico)
+
+Una familia de distribuciones \( P_\theta \) con \( \theta \in \Theta \) pertenece a la familia exponencial de distribuciones si su función de masa de probabilidad (fmp) o función de densidad de probabilidad (fdp) puede escribirse como:
+
+\[ p(x|\eta) = h(x) \exp\left( \eta(\theta) \cdot t(x) - a(\theta) \right) \]
+
+Para funciones reales \( h(x) \), \( a(\theta) \) y \( t(x) \), muestre que tanto la distribución Bernoulli (utilizada para la regresión logística), la distribución normal (utilizada en la regresión lineal) y la distribución Poisson (utilizada en la regresión Poisson sobre conteos) pertenecen a esta familia de distribuciones.
+
+
+#### Función de Masa de Probabilidad de la distribución Bernoulli: 
+
+$$
+p(x|\theta) = \theta^x \cdot (1 - \theta)^{1-x}
+$$
+
+Donde 𝑥 puede ser 0 o 1, y 𝜃 es la probabilidad de éxito.
+
+Podemos expresar esta fmp en la forma requerida:
+
+$$
+p(x|\eta) = \exp(\eta \cdot x - \log(1 + \exp(\eta)))
+$$
+Donde:
+
+- \( h(x) = 1 \)
+
+- \( t(x) = x \)
+
+- \( η = \log\left(\frac{θ}{1 - θ}\right) \)
+
+- \( a(η) = \log(1 + \exp(η)) \)
+
+
+#### Función de Masa de Probabilidad de la distribución normal: 
+
+\[
+f(x|\mu, \sigma^2) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
+\]
+
+Podemos expresar esta fdp en la forma requerida:
+
+\[
+p(x|\eta) = \frac{1}{\sqrt{2\pi}} \exp\left(\eta x - \frac{\eta^2}{2}\right)
+\]
+
+Donde: 
+
+- \( h(x) = \frac{1}{\sqrt{2\pi}\sigma} \)
+
+- \( t(x) = x \)
+
+- \( \eta = \frac{\mu}{\sigma^2} \)
+
+- \( a(\eta) = \frac{\eta^2}{2} \)
+
+
+#### Función de Masa de Probabilidad de la distribución Poisson: 
+
+\[
+p(x|\lambda) = \frac{e^{-\lambda}\lambda^x}{x!}
+\]
+
+Podemos expresar esta fmp en la forma requerida:
+
+\[
+p(x|\eta) = \exp(-e^\eta) \frac{e^{\eta x}}{x!}
+\]
+
+donde:
+
+- \( h(x) = \frac{1}{x!} \)
+
+- \( t(x) = x \)
+
+- \( \eta = \log(\lambda) \)
+
+- \( a(\eta) = e^\eta \).
+
+
+## Problema 2 - 50 pts (práctico). 
+
+La Universidad de California Irvine (UCI) tiene un repositorio de datos de ejemplo para el uso de machine learning y aprendizaje estadístico. Uno de los conjuntos de
+datos es el denominado Heart Disease, su descripción detallada se encuentra en la URL a continuación:
+
+
+Con el conjunto de datos completo, construya un modelo de regresión logıstico con función de enlace logit tomando como respuesta la presencia de la enfermedad cardiaca, use las demás variables como explicativas en el modelo de regresión. Revise las URL dadas para la definición de cada una de las variables y note que debe obtener la variable respuesta categorizando una de las variables del conjunto de datos. Siga los siguientes pasos en la realización del ejercicio:
+
+
+```{r}
+columnas <- c("age","sex","cp","trestbps","chol","fbs","restecg","thalach","exang","oldpeak","slope","ca","thal","num")
+datos <- read.csv("processed.cleveland.data.txt", col.names = columnas)
+datos$num <- ifelse(datos$num == 0, 0, 1)
+```
+
+
+1. Imputar datos: El conjunto de datos tiene datos perdidos en algunas variables. Estos están notados con un ?. Impute los valores perdidos como la mediana de los datos para las variables correspondientes.
+```{r, echo = TRUE}
+# Convertir las columnas a numéricas
+datos <- data.frame(apply(datos, 2, as.numeric))
+
+# Imputar los valores perdidos con la mediana de cada columna
+for (col in names(datos)) {
+  datos[, col][is.na(datos[, col])] <- median(datos[, col], na.rm = TRUE)
+}
+```
+```{r, echo = FALSE}
+# Calcula el número de valores nulos en cada columna
+nulos_por_columna <- colSums(is.na(datos))
+
+# Imprime el número de valores nulos en cada columna
+print(nulos_por_columna)
+```
+
+2. Revisar las distribuciones bivariadas: Revise la distribución de la variable respuesta para cada una de las co-variables categóricas de manera bivariada. ¿observa algún inconveniente con alguna de las variables al hacer el análisis?.
+
+```{r}
+# Crear tablas de contingencia entre la variable respuesta (num) y cada variable categórica
+tabla_cp <- table(datos$num, datos$cp)
+tabla_sex <- table(datos$num, datos$sex)
+tabla_cp <- table(datos$num, datos$cp)
+tabla_sex <- table(datos$num, datos$sex)
+tabla_fbs <- table(datos$num, datos$fbs)
+tabla_restecg <- table(datos$num, datos$restecg)
+tabla_slope <- table(datos$num, datos$slope)
+# Agrega más tablas para otras variables categóricas si es necesario
+
+# Muestra las tablas de contingencia
+print("Tabla de contingencia para la variable 'cp':")
+print(tabla_cp)
+
+print("Tabla de contingencia para la variable 'sex':")
+print(tabla_sex)
+# Agrega más impresiones de tablas para otras variables categóricas si es necesario
+
+```
+```{r}
+barplot(tabla_cp, beside = TRUE, legend = TRUE, main = "Variable CP vs. Respuesta")
+```
+Variable CP: tipo de dolor en el pecho
+        -- Valor 1: angina típica
+        -- Valor 2: angina atípica
+        -- Valor 3: dolor no anginoso
+        -- Valor 4: asintomático
+
+Se puede identificar una presencia de eventos de ataque cardiaco cuando el dolor es asintomatico 
+
+```{r}
+barplot(tabla_sex, beside = TRUE, legend = TRUE, main = "Variable Sex vs. Respuesta")
+```
+sexo: (1 = masculino; 0 = femenino)
+
+Hay una mayor presencia de eventos de ataque cardiacos en hombres
+
+
+```{r}
+barplot(tabla_fbs, beside = TRUE, legend = TRUE, main = "Variable FBS vs. Respuesta")
+```
+fbs: (azúcar en sangre en ayunas > 120 mg/dl) (1 = verdadero; 0 = falso)
+
+la presencia de azucar en sangre en ayunas no parece tener relación con la cantidad de registros de ataques al corazon
+
+```{r}
+barplot(tabla_restecg, beside = TRUE, legend = TRUE, main = "Variable Restecg vs. Respuesta")
+```
+restecg: resultados electrocardiográficos en reposo
+        -- Valor 0: normal
+        -- Valor 1: tener anomalía de la onda ST-T (inversiones de la onda T y/o elevación o depresión del ST > 0,05 mV)
+        -- Valor 2: muestra probable o definitiva hipertrofia ventricular izquierda según los criterios de Estes
+        
+La variable parece tener relación con el evento de presentar un ataque cardiaco, donde el valor 2, que indica una hipertrofia ventricular ocasiona el aumento del riesgo en el evento.
+
+```{r}
+barplot(tabla_slope, beside = TRUE, legend = TRUE, main = "Variable Slope vs. Respuesta")
+```
+pendiente: la pendiente del segmento ST del ejercicio máximo
+        -- Valor 1: pendiente ascendente
+        -- Valor 2: plano
+        -- Valor 3: pendiente descendente
+        
+El valor dos de esta variable parece aumentar el riesgo de presentar un ataque cardiaco.
+
+
+3. Modelo bivariado: Calcule manualmente (como lo vimos en clase, a partir de la tabla de contingencia), los parámetros estimados de regresión logística considerando únicamente la variable fbs (glucemia en ayunas) y la variable respuesta. Verifique el resultado ajustando el glm correspondiente.
+
+```{r}
+tabla_contingencia <- table(datos$num, datos$fbs)
+
+print("Tabla de Contingencia para la variable 'fbs':")
+print(tabla_contingencia)
+```
+
+```{r, echo= FALSE, results='hide'}
+probabilidad_ataque_con_glucemia = (22/139)
+probabilidad_no_ataque_con_glucemia = (117 / 139)
+
+probabilidad_ataque_sin_glucemia = (22 / 163)
+probabilidad_no_ataque_sin_glucemia = (141 / 163)
+
+numerador = probabilidad_ataque_con_glucemia / probabilidad_no_ataque_con_glucemia
+denominador =  probabilidad_ataque_sin_glucemia / probabilidad_no_ataque_sin_glucemia
+```
+
+```{r}
+log(probabilidad_ataque_con_glucemia) - log(probabilidad_ataque_sin_glucemia)
+```
+```{r}
+set.seed(1) 
+n_tot=302 
+rval_reprobado =runif(n_tot) 
+prop_reprobado =44/302
+h0_reporbado = ifelse(rval_reprobado<prop_reprobado,"A.Ataque","B.No_ataque") 
+rval_asistencia =runif(n_tot) 
+prop_asistencia =139/302 
+h0_asistencia =ifelse(rval_asistencia <prop_reprobado,"A.Glucemia","B.Sin_glucemia") 
+h0_tablacont = table(h0_asistencia,h0_reporbado) 
+print(h0_tablacont)
+```
+```{r}
+
+h0_or = (h0_tablacont[1,1]/h0_tablacont[1,2])/(h0_tablacont[2,1]/h0_tablacont[2,2]) 
+print(h0_or)
+
+```
+Modelo logistico Bivariado
+
+```{r}
+# Ajustar un modelo de regresión logística utilizando glm()
+modelo_logistico <- glm(num ~ fbs, data = datos, family = binomial)
+
+# Imprime el resumen del modelo
+summary(modelo_logistico)$coefficients
+```
+
+4. Modelo multivariado: Ajuste un nuevo modelo con todas las variables. ¿Cuáles variables son significativas mediante el test de Wald? ¿Cuáles no lo son?.
+
+```{r}
+# Ajustar un modelo de regresión logística con todas las variables
+modelo_multivariado <- glm(num ~ ., data = datos, family = binomial)
+
+# Imprimir el resumen del modelo
+summary(modelo_multivariado)
+```
+
+5. Visualización de probabilidades predichas bajo modelo multivariado: Usando el modelo del punto anterior, encuentre las probabilidades de presentar enfermedad cardiaca y visualizarlas junto a la variable respuesta. ¿Describe el modelo la presencia de enfermedad cardiaca?.
+
+```{r}
+# Calcular las probabilidades predichas bajo el modelo multivariado
+datos$probabilidades <- predict(modelo_multivariado, type = "response")
+
+# Visualizar las probabilidades predichas junto con la variable respuesta
+library(ggplot2)
+ggplot(datos, aes(x = num, y = probabilidades)) +
+  geom_point(aes(color = factor(num))) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  labs(x = "Enfermedad cardíaca", y = "Probabilidad predicha") +
+  scale_color_discrete(name = "Enfermedad cardíaca") +
+  theme_minimal()
+```
+Problema 3 - 30 pts (práctico) El conjunto de datos AAD-taller03.xlsx contiene la predicción de incumplimiento de pago de tarjeta de crédito bajo dos modelos logísticos diferentes para un total de 9080 clientes. Se cuenta además con la variable de incumplimiento observada al finalizar el periodo.
+
+¿Cuál de los dos modelos logísticos tiene mayor poder de predicción? Explique con fundamento estadístico su resultado.
+
+
+```{r cars}
+df <- read_excel("AAD-taller03.xlsx")
+df
+```
