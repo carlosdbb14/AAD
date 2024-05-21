@@ -274,7 +274,10 @@ ggplot(datos, aes(x = num, y = probabilidades)) +
   scale_color_discrete(name = "Enfermedad cardíaca") +
   theme_minimal()
 ```
-Problema 3 - 30 pts (práctico) El conjunto de datos AAD-taller03.xlsx contiene la predicción de incumplimiento de pago de tarjeta de crédito bajo dos modelos logísticos diferentes para un total de 9080 clientes. Se cuenta además con la variable de incumplimiento observada al finalizar el periodo.
+
+## Problema 3 - 30 pts (práctico) 
+
+El conjunto de datos AAD-taller03.xlsx contiene la predicción de incumplimiento de pago de tarjeta de crédito bajo dos modelos logísticos diferentes para un total de 9080 clientes. Se cuenta además con la variable de incumplimiento observada al finalizar el periodo.
 
 ¿Cuál de los dos modelos logísticos tiene mayor poder de predicción? Explique con fundamento estadístico su resultado.
 
@@ -283,3 +286,57 @@ Problema 3 - 30 pts (práctico) El conjunto de datos AAD-taller03.xlsx contiene 
 df <- read_excel("AAD-taller03.xlsx")
 df
 ```
+
+Calculando la Curva ROC, para el modelo 1:
+
+```{r}
+library(ROCR)
+## Modelo 1 
+
+pred_1 <- ROCR::prediction(df$ScoreLogisticoA,df$Incumplimiento)
+perf_1 <- ROCR::performance(pred_1,'tpr','fpr')
+plot(perf_1)
+```
+
+calculando la curva ROC para el modelo 2:
+
+```{r}
+pred_2 <- ROCR::prediction(df$ScoreLogisticoB,df$Incumplimiento)
+perf_2 <- ROCR::performance(pred_2,'tpr','fpr')
+plot(perf_2)
+```
+
+```{r}
+#areas bajo la curva
+auc_1 <- ROCR::performance(pred_1,measure = 'auc')
+auc_1@y.values
+auc_2 <- ROCR:: performance(pred_2,measure = 'auc')
+auc_2@y.values
+```
+
+Aunque grafica y estadisticamente hablando podemos notar que ambos modelos tienen un bajo poder de predicción general, podemos deducir que el modelo 1 tiene un mayor poder de predicción que el modelo 2, con base a su curva ROC, pues el area bajo la curva de esta es de `r auc_1@y.values[[1]]`, siendo mayor que la del modelo 2 y mostrando por tanto mayor poder de predicción en comparación.
+
+## Punto 4
+
+```{r}
+columnas <- c("age","sex","cp","trestbps","chol","fbs","restecg","thalach","exang","oldpeak","slope","ca","thal","num")
+datos <- read.csv("processed.cleveland.data.txt", col.names = columnas)
+datos$num <- ifelse(datos$num == 0, 0, 1)
+```
+
+```{r}
+datos <- data.frame(apply(datos, 2, as.numeric))
+
+```
+```{r}
+library(mixtools)
+
+for (col in names(datos)) {
+  if(sum(is.na(datos[col]) != 0 )){
+    dat <- datos[!is.na(datos[col]),col]
+    mixem <- mixtools::normalmixEM(dat, k=2)
+  }
+}
+```
+
+
